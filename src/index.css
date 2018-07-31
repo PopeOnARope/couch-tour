@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+@font-face {
+  font-family: CenturyGothic;
+  src: url(./assets/fonts/CenturyGothic.ttf);
+}
+@font-face {
+  font-family: pt-serif;
+  src: url(./assets/fonts/pt-serif.ttf);
+}
+@font-face {
+  font-family: pt-serif-bold;
+  src: url(./assets/fonts/pt-serif-bold.ttf);
+}
+@font-face {
+  font-family: pt-serif-italic;
+  src: url(./assets/fonts/pt-serif-italic.ttf);
+}
+
+p {
+  font-family: "pt-serif";
+}
+
+h1,
+h2 {
+  font-family: CenturyGothic;
+}
