@@ -25,18 +25,29 @@ app.get('/api/hello', (req, res) => {
 	res.send({ express: 'Hello From Express' });
 });
 
-app.post('/api/shows', (req, res) => {
-	debugger;
-	const _res = req.body.items.map(artist =>
-		fetch(
-			`https://rest.bandsintown.com/artists/${artist.name
+app.post('/api/shows', async (req, res) => {
+	try {
+		const response = await fetch(
+			`https://rest.bandsintown.com/artists/${req.body.items[0].name
 				.replace(/\s+/g, '')
 				.replace(/\./g, '')
 				.toLowerCase()}/events?app_id=5edfb100a7e4e77bd4658d1184623cbf`
-		)
-	);
-	console.log(req.body);
-	res.send(_res);
+		);
+		const show = await show.json();
+		return show;
+	} catch (err) {
+		res.send(err);
+	}
+
+	// const _res = req.body.items.forEach(artist =>
+	// fetch(
+	// 	`https://rest.bandsintown.com/artists/${req.body.items[0].name
+	// 		.replace(/\s+/g, '')
+	// 		.replace(/\./g, '')
+	// 		.toLowerCase()}/events?app_id=5edfb100a7e4e77bd4658d1184623cbf`
+	// ).then(__res => {
+	// 	// arr.push
+	// 	res.send(__res);
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

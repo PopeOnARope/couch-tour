@@ -11,7 +11,7 @@ const getShows = async args => {
 		method: 'POST',
 		body: JSON.stringify(args),
 		headers: { 'Content-Type': 'application/json' }
-	});
+	}).catch(err => err);
 	const body = await response.json();
 
 	console.log(body);
@@ -68,51 +68,51 @@ const getArtists = callback => {
 		});
 };
 
-const Authorize = ({
-	setUserData,
-	isSpotifyAuthorized,
-	user: { display_name, images, items }
-}) => {
-	if (isSpotifyAuthorized && !display_name) {
-		getData(setUserData);
-		return <Spinner />;
+class Authorize extends React.Component {
+	componentDidMount() {
+		if (!this.props.isSpotifyAuthorized) {
+			authorizeSpotify(res => {
+				setUserData(getData(res));
+			});
+		}
 	}
-	if (display_name) {
-		return (
-			<div>
-				<img src={images[0].url} />
-				<h1>Hello {display_name}!</h1>
-				{items && items.map(item => <span>{item.name}, </span>)}
-				<Button
-					onClick={e => {
-						e.preventDefault();
-						getArtists(setUserData);
-					}}
-				>
-					get artists
-				</Button>
-				<p>
-					Can we use your current location to show you only dates that are
-					relevant to you?
-				</p>
-				<Button onClick={() => {}}>Allow Couch Tour to use my location</Button>
-			</div>
-		);
+	render() {
+		const {
+			setUserData,
+			isSpotifyAuthorized,
+			user: { display_name, images, items }
+		} = this.props;
+		if (isSpotifyAuthorized && !display_name) {
+			getData(setUserData);
+			return <Spinner />;
+		}
+		if (display_name) {
+			return (
+				<div>
+					<img src={images[0].url} />
+					<h1>Hello {display_name}!</h1>
+					{items && items.map(item => <span>{item.name}, </span>)}
+					<Button
+						onClick={e => {
+							e.preventDefault();
+							getArtists(setUserData);
+						}}
+					>
+						get artists
+					</Button>
+					<p>
+						Can we use your current location to show you only dates that are
+						relevant to you?
+					</p>
+					<Button onClick={() => {}}>
+						Allow Couch Tour to use my location
+					</Button>
+				</div>
+			);
+		}
+		return <div style={{ background: '#000', height: '100%' }} />;
 	}
-	return (
-		<div style={{ background: '#000', height: '100%' }}>
-			<Button
-				onClick={() =>
-					authorizeSpotify(res => {
-						setUserData(getData(res));
-					})
-				}
-			>
-				Authorize Spotify
-			</Button>
-		</div>
-	);
-};
+}
 
 const ConnectedComponent = connect(state => state, { setUserData })(Authorize);
 
