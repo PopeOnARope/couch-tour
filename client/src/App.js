@@ -17,10 +17,7 @@ class App extends Component {
             path="/authorize"
             component={() => <Setup step={"authorize"} />}
           />
-          <Route
-            path="/callback"
-            component={() => <Setup step={"authorize"} />}
-          />
+          <Route path="/callback" component={() => <Setup step={"list"} />} />
           <Route exact path="/" component={() => <Setup step={"welcome"} />} />
         </div>
       </Router>

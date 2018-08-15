@@ -6,6 +6,7 @@ import Authorize from "../Authorize/Authorize";
 import { Transition } from "react-transition-group";
 import { connect } from "react-redux";
 import { updateCurrentView } from "../../redux/reducers";
+import ShowsList from "../ShowsList/ShowsList";
 
 const Welcome = () => (
   <React.Fragment>
@@ -23,20 +24,6 @@ const isSpotifyAuthorized = () => {
   const location = window.location.href;
   return location.includes("token");
 };
-
-const Setup = ({ className, updateCurrentView, shown, step }) => (
-  <React.Fragment>
-    <div className={className}>
-      <div className="innerText">
-        {step === "welcome" && <Welcome />}
-        {step === "authorize" && (
-          <Authorize isSpotifyAuthorized={isSpotifyAuthorized()} />
-        )}
-      </div>
-    </div>
-    <img src={drummer} style={{ height: `${window.innerHeight + 20}px` }} />
-  </React.Fragment>
-);
 
 const fadeIn = keyframes`
 0% {
@@ -60,6 +47,55 @@ const text = keyframes`
 }
 `;
 
+const _ImageDiv = styled("div")`
+  background: url(${drummer});
+  width: 100%;
+`;
+const _GradientDiv = styled("div")`
+  height: ${window.innerHeight}px;
+  padding: 1rem;
+  background: linear-gradient(
+    0deg,
+    rgba(33, 33, 33, 0.8) 50%,
+    rgba(26, 80, 100, 0.8) 60%,
+    rgba(26, 125, 150, 0.8) 75%,
+    rgba(33, 175, 65, 0.8) 95%
+  );
+
+  color: #fff;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-size: 400% 400%;
+  animation: ${fadeIn} 5s ease 1;
+  .innerText {
+    animation: ${text} 2s ease 1;
+    width: 100%;
+  }
+  button {
+    animation: ${button} 4s ease 1;
+  }
+  position: absolute;
+  width: 100%;
+  .transition-exiting {
+    animation: ${button} 4s ease 1;
+  }
+`;
+
+const Setup = ({ updateCurrentView, shown, step }) => (
+  <_ImageDiv>
+    <_GradientDiv>
+      <div>
+        <div className="innerText">
+          {step === "welcome" && <Welcome />}
+          {step === "authorize" && !isSpotifyAuthorized() && <Authorize />}
+          {step === "list" && isSpotifyAuthorized() && <ShowsList />}
+        </div>
+      </div>
+    </_GradientDiv>
+  </_ImageDiv>
+);
+
 const button = keyframes`
 0% {
   bottom: -20rem;
@@ -74,13 +110,14 @@ const button = keyframes`
 }
 `;
 
-const StyledWelcome = styled(Setup)`
+const StyledSetup = styled(Setup)`
   height: ${window.innerHeight}px;
   padding: 1rem;
   background: linear-gradient(
     0deg,
     rgba(26, 125, 150, 0.8) 52%,
-    rgba(33, 175, 65, 0.8) 94%
+    rgba(33, 175, 65, 0.8) 94%,
+    rgba(33, 33, 33, 0.8) 94%
   );
 
   color: #fff;
@@ -103,8 +140,8 @@ const StyledWelcome = styled(Setup)`
   }
 `;
 
-const ConnectedComponent = connect(() => {}, { updateCurrentView })(
-  StyledWelcome
+const ConnectedComponent = connect(state => state, { updateCurrentView })(
+  StyledSetup
 );
 
 export default ConnectedComponent;

@@ -13,10 +13,7 @@ const reducer = handleActions(
       console.log(payload);
       return {
         ...state,
-        user: {
-          ...state.user,
-          ...payload
-        }
+        ...payload
       };
     }
   },
