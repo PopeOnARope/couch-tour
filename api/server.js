@@ -10,7 +10,8 @@ const {
   getDistanceFromLatLonInKm,
   formatStringForQuery,
   getShows,
-  filterShows
+  filterShows,
+  getUserData
 } = utils;
 
 const bodyParser = require("body-parser");
@@ -30,12 +31,9 @@ app.use(
  */
 app.use(bodyParser.json());
 
-const getUserData = async config => {
-  const USER_URL = "https://api.spotify.com/v1/me?";
-  const userData = await fetch(USER_URL, config);
-  const parsedUserData = await userData.json();
-  return parsedUserData;
-};
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("client/build"));
+}
 
 app.post("/api/shows", async (req, res) => {
   const spoConfig = getConfig(req.body.accessToken);
