@@ -5,22 +5,17 @@ import Setup from "./Components/Setup/Setup";
 import logo from "./logo.svg";
 import "./App.css";
 import { connect } from "react-redux";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { ThemeProvider } from "emotion-theming";
+const theme = { primary: "#259998" };
 
 class App extends Component {
   render() {
     return (
-      <Router>
-        <div className="App">
-          <Route path="/welcome" component={() => <Setup step={"welcome"} />} />
-          <Route
-            path="/authorize"
-            component={() => <Setup step={"authorize"} />}
-          />
-          <Route path="/callback" component={() => <Setup step={"list"} />} />
-          <Route exact path="/" component={() => <Setup step={"welcome"} />} />
-        </div>
-      </Router>
+      <div className="App" style={{ height: `${document.innerHeight}` }}>
+        <ThemeProvider theme={theme}>
+          <Setup />
+        </ThemeProvider>
+      </div>
     );
   }
 }

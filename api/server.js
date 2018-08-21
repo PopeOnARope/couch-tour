@@ -5,7 +5,13 @@ const app = express();
 const port = process.env.PORT || 5000;
 const utils = require("./utils");
 
-const { getConfig, getDistanceFromLatLonInKm, formatStringForQuery } = utils;
+const {
+  getConfig,
+  getDistanceFromLatLonInKm,
+  formatStringForQuery,
+  getShows,
+  filterShows
+} = utils;
 
 const bodyParser = require("body-parser");
 
@@ -38,63 +44,45 @@ app.post("/api/shows", async (req, res) => {
   try {
     const USER_URL = "https://api.spotify.com/v1/me?";
     const ARTIST_URL =
-      "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=1000&offset=0";
+      "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=1000&offset=0";
     const userData = await fetch(USER_URL, spoConfig);
     const parsedUserData = await userData.json();
 
     const artists = await fetch(ARTIST_URL, spoConfig);
     const parsedArtists = await artists.json();
-    const shows = parsedArtists.items.map(async artist => {
-      const fetchedArtist = await fetch(
-        `https://rest.bandsintown.com/artists/${formatStringForQuery(
-          artist.name
-        )}?app_id=5edfb100a7e4e77bd4658d1184623cbf`
-      );
-      const parsedArtist = await fetchedArtist.json();
-      if (parsedArtist && parsedArtist.name) {
-        const show = await fetch(
-          `https://rest.bandsintown.com/artists/${formatStringForQuery(
-            artist.name
-          )}/events?app_id=5edfb100a7e4e77bd4658d1184623cbf`
-        );
-        let parsedShow = await show.json();
-        parsedShow = parsedShow.map(show => ({
-          ...show,
-          image_url: parsedArtist.image_url
-        }));
-        return parsedShow;
-      }
-      return {};
+    let shows = getShows(parsedArtists.items);
+    shows = await Promise.all(shows);
+
+    const filteredShows = filterShows(shows, position);
+
+    res.send({
+      shows: filteredShows,
+      user: parsedUserData,
+      artists: parsedArtists
     });
-    const completedShows = await Promise.all(shows);
-    const flattenedShows = completedShows.reduce(
-      (acc, val) => acc.concat(val),
-      []
-    );
+  } catch (err) {
+    console.log(err);
+    res.send(err);
+  }
+});
 
-    const filteredShows = flattenedShows
-      .map(show => ({
-        ...show,
-        distance: getDistanceFromLatLonInKm(show, position)
-      }))
-      .filter((show, idx, arr) => {
-        return (
-          show.venue &&
-          show.distance < 1000 &&
-          (arr[idx - 1].venue && show.venue.name !== arr[idx - 1].venue.name)
-        );
-      });
+app.post("/api/similarshows", async (req, res) => {
+  try {
+    const { accessToken, position } = req.body;
+    const spoConfig = getConfig(accessToken);
+    const ARTIST_URL = `https://api.spotify.com/v1/artists/${
+      req.body.id
+    }/related-artists`;
 
-    filteredShows.sort((a, b) => {
-      getDistanceFromLatLonInKm(a, position) -
-        getDistanceFromLatLonInKm(b, position);
+    const artists = await fetch(ARTIST_URL, spoConfig);
+    const parsedArtists = await artists.json();
+
+    let shows = getShows(parsedArtists.artists);
+    shows = await Promise.all(shows);
+    const filteredShows = filterShows(shows, position);
+    res.send({
+      shows: filteredShows
     });
-
-    filteredShows.forEach(show => {
-      console.log(getDistanceFromLatLonInKm(show, position));
-    });
-
-    res.send({ shows: filteredShows, user: parsedUserData });
   } catch (err) {
     console.log(err);
     res.send(err);

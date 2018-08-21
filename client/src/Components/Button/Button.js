@@ -2,16 +2,23 @@ import React from "react";
 import styled from "react-emotion";
 import { Link } from "react-router-dom";
 
-const _Button = ({ onClick, to, href, children, className }) => {
+const _Button = ({ onClick, to, href, children, className, target }) => {
   if (onClick) {
     return (
       <button className={className} onClick={onClick}>
         {children}
       </button>
     );
+  }
+  if (href || !to) {
+    return (
+      <a className={className} href={href} target={target}>
+        {children}
+      </a>
+    );
   } else {
     return (
-      <Link className={className} to={to} href={href}>
+      <Link className={className} to={to}>
         {children}
       </Link>
     );

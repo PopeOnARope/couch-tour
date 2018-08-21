@@ -78,7 +78,7 @@ const StyledWelcome = styled(Welcome)`
     rgba(26, 125, 150, 0.8) 52%,
     rgba(33, 175, 65, 0.8) 94%
   );
-
+  padding: 2rem;
   color: #fff;
   display: flex;
   flex-direction: row;
@@ -86,9 +86,11 @@ const StyledWelcome = styled(Welcome)`
   background-size: 200% 200%;
   animation: ${fadeIn} 5s ease 1;
   .innerText {
+    display: flex;
+    flex-direction: column;
     animation: ${text} 2s ease 1;
   }
-  button {
+  a {
     animation: ${button} 4s ease 1;
   }
   position: absolute;

@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: Helvetica Neue;
 }
 
 @font-face {
@@ -21,11 +21,14 @@ body {
   src: url(./assets/fonts/pt-serif-italic.ttf);
 }
 
-p {
+/* p {
   font-family: "pt-serif";
-}
+} */
 
 h1,
 h2 {
   font-family: CenturyGothic;
+}
+p {
+  font-size: 0.85rem;
 }

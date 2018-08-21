@@ -1,16 +1,54 @@
 import React from "react";
 import styled, { keyframes } from "react-emotion";
 import { connect } from "react-redux";
-import { setUserData } from "../../redux/reducers";
-import Spinner from "../Spinner/Spinner";
+import {
+  setUserData,
+  updateDistance,
+  toggleMapView
+} from "../../redux/reducers";
+import Spinner from "react-spinkit";
+import Button from "../Button/Button";
+import ShowDetailsModal from "../ShowDetailsModal/ShowDetailsModal";
+import Map from "../Map/Map";
+import ShowCard from "../ShowCard/ShowCard";
+import LazyLoad from "react-lazy-load";
 
-const getShows = async callback => {
+import Recommendation from "../Recommendation/Recommendation";
+
+const getCurrentPosition = (options = {}) => {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+};
+
+const loadPosition = async callback => {
+  try {
+    const position = await getCurrentPosition();
+    const { latitude, longitude } = position.coords;
+
+    const hydratedPostion = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${
+        position.coords.latitude
+      },${
+        position.coords.longitude
+      }&key=AIzaSyDyrF2Wm56q4IhN8oO6mIbDXTxwjQUKK0Y`
+    );
+    const parsedHydratedPosition = await hydratedPostion.json();
+    callback({
+      position: { latitude, longitude, ...parsedHydratedPosition.results[5] }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getShows = async (position, callback) => {
   const location = window.location.href;
   const accessToken = location.slice(location.indexOf("token=") + 6);
   const response = await fetch("/api/shows", {
     method: "POST",
     body: JSON.stringify({
-      position: { latitude: "32.776", longitude: "-79.931" },
+      position,
       accessToken
     }),
     headers: { "Content-Type": "application/json" }
@@ -20,91 +58,155 @@ const getShows = async callback => {
   callback(parsedResponse);
 };
 
+const expand = keyframes`
+0% {
+  color: rgba(255,255,255,0);
+  height: 0px;
+}
+
+100% {
+  color: rgba(255,255,255,1);
+  height: ${window.innerHeight - 140}px;
+`;
+
 const _Header = styled("div")`
   height: 5rem;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
   padding: 1rem;
-  img {
-    border-radius: 100%;
-    height: 75%;
+  h3 {
+    width: 100%;
+  }
+  align-items: center;
+  .secondary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-around;
   }
 `;
 
-const _ShowCard = styled("div")`
-  width: 10rem;
-  display: inline-block;
-  margin: 2rem;
-  border: 1px solid #aaa;
-  background: #ccc;
-  color: #222;
-  img {
-    object-fit: cover;
-  }
-  p,
-  h3 {
-    margin: 0px;
-  }
+const _Layout = styled("div")`
+  width: 100%;
+  height: 100%;
 `;
-const _CardContent = styled("div")`
-  background: #eee;
-`;
-const _ImageContainer = styled("div")(props => ({
-  height: "10rem",
-  width: "10rem",
-  background: `url(${props.background})`,
-  backgroundSize: `100%`
+
+const _ShowsContainer = styled("div")(props => ({
+  display: "flex",
+  flexDirection: "row",
+  padding: "1rem",
+  "@media(min-width: 768px)": {
+    padding: `1rem, 2rem`
+  },
+  flexWrap: "wrap",
+  justifyContent: "end",
+  height: `${window.innerHeight - 140}px`,
+  overflow: "scroll",
+  animation: props.shouldReanimate ? `${expand} 1s ease-in 1` : "none",
+  background: `linear-gradient(
+    to bottom,
+    rgba(75, 75, 75, 0.1) 0%,
+    rgba(0, 0, 0, 0.75) 100%
+  )`
 }));
 
-const _ShowsContainer = styled("div")`
-  padding: 2rem;
+export const _SpinnerContainer = styled("div")`
+  margin: auto;
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  flex-wrap: wrap;
-  height: ${window.innerHeight - 50}px;
-  overflow: scroll;
-`;
-const ShowCard = ({
-  offers,
-  venue,
-  datetime,
-  on_sale_datetime,
-  description,
-  lineup,
-  id,
-  artist_id,
-  url,
-  image_url
-}) => (
-  <_ShowCard>
-    <_ImageContainer background={image_url} />
-    <_CardContent>
-      <h3>{lineup && lineup[0]}</h3>
-      <p>{venue.name}</p>
-      <p>{venue.city}</p>
-    </_CardContent>
-  </_ShowCard>
-);
-
-const ShowsList = ({ shows, user, setUserData }) => {
-  if (!user || !user.display_name) {
-    getShows(setUserData);
-    return <Spinner />;
+  flex-direction: column;
+  align-items: center;
+  p {
+    margin: 2rem;
   }
+`;
+
+const ShowsList = ({
+  shows,
+  user,
+  setUserData,
+  updateDistance,
+  position,
+  distance,
+  currentShow,
+  toggleMapView,
+  mapViewToggled,
+  shouldReanimate,
+  artists
+}) => {
+  if (!position) {
+    loadPosition(setUserData);
+    return (
+      <_SpinnerContainer>
+        <p>loading location data...</p>{" "}
+        <Spinner color="#eee" name="ball-scale-ripple-multiple" />
+      </_SpinnerContainer>
+    );
+  }
+
+  if (!user || !user.display_name) {
+    getShows(position, setUserData).catch(err => {
+      console.log(err);
+    });
+    return (
+      <_SpinnerContainer>
+        <p>fetching concert data...</p>
+        <Spinner color="#eee" name="ball-scale-ripple-multiple" />
+      </_SpinnerContainer>
+    );
+  }
+  console.log(shouldReanimate);
   return (
-    <React.Fragment>
+    <_Layout>
       <_Header>
-        <input />
-        <img src={user.images[0].url} />
+        <h3>
+          Ok {user.display_name}, here are some upcoming shows within {distance}km{" "}
+          of {position.address_components[0].short_name}
+        </h3>
+        <div class="secondary">
+          <label>
+            adjust range
+            <input
+              type="range"
+              min="0"
+              max="1000"
+              value={distance}
+              onChange={e => updateDistance(e.target.value)}
+            />
+          </label>
+          <button onClick={toggleMapView}>switch to map view</button>
+        </div>
       </_Header>
-      <_ShowsContainer>
-        {shows && shows.map(show => <ShowCard {...show} />)}
-      </_ShowsContainer>
-    </React.Fragment>
+      {!mapViewToggled && (
+        <_ShowsContainer shouldReanimate={shouldReanimate}>
+          {shows &&
+            shows
+              .filter(show => show.distance < distance)
+              .map(show => <ShowCard {...show} />)}
+          {artists &&
+            artists.items
+              .filter(artist => artist.popularity > 60)
+              .map(artist => (
+                <div style={{ height: "340px", width: "100%" }}>
+                  <h3 style={{ textAlign: "left" }}>
+                    Because you liked {artist.name}
+                  </h3>
+                  <LazyLoad height="500">
+                    <Recommendation {...artist} position={position} />
+                  </LazyLoad>
+                </div>
+              ))}
+        </_ShowsContainer>
+      )}
+      {mapViewToggled && shows && <Map />}
+    </_Layout>
   );
 };
 
-const ConnectedComponent = connect(state => state, { setUserData })(ShowsList);
+const ConnectedComponent = connect(state => state, {
+  setUserData,
+  updateDistance,
+  toggleMapView
+})(ShowsList);
 export default ConnectedComponent;
