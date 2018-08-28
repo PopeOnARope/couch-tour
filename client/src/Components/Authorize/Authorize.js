@@ -1,7 +1,6 @@
 import React from "react";
 import Button from "../Button/Button";
 import Spinner from "../Spinner/Spinner";
-import { authorizeSpotify } from "../../utils/login";
 import { connect } from "react-redux";
 import { setUserData } from "../../redux/reducers";
 import styled from "react-emotion";
@@ -34,6 +33,8 @@ const _AuthorizeForm = styled("div")`
   margin: 4rem;
   box-shadow: 3px 3px 1px #555;
 `;
+
+const authorizeSpotify = () => fetch("/login");
 
 const AuthorizeForm = () => {
   return (

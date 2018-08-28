@@ -107,8 +107,8 @@ const _ShowsContainer = styled("div")(props => ({
   animation: props.shouldReanimate ? `${expand} 1s ease-in 1` : "none",
   background: `linear-gradient(
     to bottom,
-    rgba(75, 75, 75, 0.1) 0%,
-    rgba(0, 0, 0, 0.75) 100%
+    rgba(75, 75, 75, 0.2) 0%,
+    rgba(0, 0, 0, 0.85) 100%
   )`
 }));
 
@@ -164,19 +164,6 @@ const ShowsList = ({
           Ok {user.display_name}, here are some upcoming shows within {distance}km{" "}
           of {position.address_components[0].short_name}
         </h3>
-        <div class="secondary">
-          <label>
-            adjust range
-            <input
-              type="range"
-              min="0"
-              max="1000"
-              value={distance}
-              onChange={e => updateDistance(e.target.value)}
-            />
-          </label>
-          <button onClick={toggleMapView}>switch to map view</button>
-        </div>
       </_Header>
       {!mapViewToggled && (
         <_ShowsContainer shouldReanimate={shouldReanimate}>

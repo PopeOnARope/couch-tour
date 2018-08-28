@@ -2,6 +2,7 @@ const express = require("express");
 const fetch = require("node-fetch");
 
 const app = express();
+const querystring = require("querystring");
 const port = process.env.PORT || 5000;
 const utils = require("./utils");
 
@@ -13,32 +14,69 @@ const {
   filterShows,
   getUserData
 } = utils;
-
 const bodyParser = require("body-parser");
 
-/** bodyParser.urlencoded(options)
- * Parses the text as URL encoded data (which is how browsers tend to send form data from regular forms set to POST)
- * and exposes the resulting object (containing the keys and values) on req.body
- */
+// const CLIENT_ID = "d3250185fb0f43419c877be2d8e64b86";
+
 app.use(
   bodyParser.urlencoded({
     extended: true
   })
 );
 
-/**bodyParser.json(options)
- * Parses the text as JSON and exposes the resulting object on req.body.
- */
 app.use(bodyParser.json());
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static("client/build"));
-}
+// if (process.env.NODE_ENV === "production") {
+app.use(express.static("client/build"));
+// }
+
+console.log(process.env);
+
+let redirect_uri = process.env.REDIRECT_URI || "http://localhost:5000/callback";
+
+app.get("/login", function(req, res) {
+  res.redirect(
+    "https://accounts.spotify.com/authorize?" +
+      querystring.stringify({
+        response_type: "code",
+        client_id: process.env.SPOTIFY_CLIENT_ID,
+        scope: "user-read-private user-read-email",
+        redirect_uri
+      })
+  );
+});
+
+app.get("/callback", function(req, res) {
+  let code = req.query.code || null;
+  let authOptions = {
+    url: "https://accounts.spotify.com/api/token",
+    form: {
+      code: code,
+      redirect_uri,
+      grant_type: "authorization_code"
+    },
+    headers: {
+      Authorization:
+        "Basic " +
+        new Buffer(
+          process.env.SPOTIFY_CLIENT_ID +
+            ":" +
+            process.env.SPOTIFY_CLIENT_SECRET
+        ).toString("base64")
+    },
+    json: true
+  };
+  request.post(authOptions, function(error, response, body) {
+    var access_token = body.access_token;
+    let uri = process.env.FRONTEND_URI || "http://localhost:3000";
+    res.redirect(uri + "?access_token=" + access_token);
+  });
+});
 
 app.post("/api/shows", async (req, res) => {
   const spoConfig = getConfig(req.body.accessToken);
   const { position } = req.body;
-
+  console.log(req.body.accessToken);
   try {
     const USER_URL = "https://api.spotify.com/v1/me?";
     const ARTIST_URL =

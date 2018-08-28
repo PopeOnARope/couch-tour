@@ -96,10 +96,3 @@ module.exports.filterShows = (shows, position) => {
   });
   return _shows;
 };
-
-module.exports.getUserData = async config => {
-  const USER_URL = "https://api.spotify.com/v1/me?";
-  const userData = await fetch(USER_URL, config);
-  const parsedUserData = await userData.json();
-  return parsedUserData;
-};
